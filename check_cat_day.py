@@ -33,3 +33,5 @@ tomorrow = datetime.utcnow() + timedelta(days=1)
 if is_mao_day(tomorrow):
     msg = f"Ngày mai ({tomorrow.strftime('%d-%m-%Y')}) là ngày Mão 🐰"
     requests.post("https://ntfy.sh/lunar-mao-days", data=msg)
+    else:
+    print("Không phải ngày Mão")
