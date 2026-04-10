@@ -1,37 +1,21 @@
 from datetime import datetime, timedelta
 import requests
-import math
+import pytz
+from lunarcalendar import Converter, Solar
 
-# ===== Julian Day =====
-def jd_from_date(dd, mm, yy):
-    a = int((14 - mm) / 12)
-    y = yy + 4800 - a
-    m = mm + 12*a - 3
-    jd = dd + int((153*m + 2)/5) + 365*y + int(y/4) - int(y/100) + int(y/400) - 32045
-    return jd
+tz = pytz.timezone("Asia/Singapore")
 
-# ===== Can Chi ngày =====
-def get_day_can_chi(jd):
-    can = (jd + 9) % 10
-    chi = (jd + 1) % 12
+def get_can_chi(date):
+    solar = Solar(date.year, date.month, date.day)
+    lunar = Converter.Solar2Lunar(solar)
+    return lunar.day8Char  # (can, chi)
 
-    can_list = ["Giáp","Ất","Bính","Đinh","Mậu","Kỷ","Canh","Tân","Nhâm","Quý"]
-    chi_list = ["Tý","Sửu","Dần","Mão","Thìn","Tỵ","Ngọ","Mùi","Thân","Dậu","Tuất","Hợi"]
+tomorrow = datetime.now(tz) + timedelta(days=1)
 
-    return can_list[can], chi_list[chi]
+can, chi = get_can_chi(tomorrow)
 
-# ===== Check ngày Mão =====
-def is_mao_day(date):
-    jd = jd_from_date(date.day, date.month, date.year)
-    _, chi = get_day_can_chi(jd)
-    return chi == "Mão"
-
-# ===== MAIN =====
-# check ngày mai (để báo trước 1 ngày)
-tomorrow = datetime.utcnow() + timedelta(days=1)
-
-if is_mao_day(tomorrow):
-    msg = f"Ngày mai ({tomorrow.strftime('%d-%m-%Y')}) là ngày Mão 🐰"
+if chi == "Mão":
+    msg = f"Ngày mai ({tomorrow.strftime('%d-%m-%Y')}) là {can} {chi} 🐰"
     requests.post("https://ntfy.sh/lunar-mao-days", data=msg)
 else:
-    print("Không phải ngày Mão")
+    print(f"{tomorrow.strftime('%d-%m-%Y')} là {can} {chi} (không phải ngày Mão)")
